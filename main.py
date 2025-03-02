@@ -1,25 +1,38 @@
-import os
 from flask import Flask, request, jsonify
 from price_scraper import scrape_prices
+import os
+from flask_cors import CORS  # 🔹 Enables Cross-Origin requests
 
 app = Flask(__name__)
+CORS(app)  # 🔹 Allow requests from any frontend (Flutter)
+
 
 @app.route('/')
 def home():
-    return jsonify({"message": "Price Scraper API is running!"})
+    return jsonify({"message": "✅ Price Scraper API is running!"})
 
-@app.route('/scrape', methods=['GET'])
-def scrape():
-    product_name = request.args.get('product', '')  # Get product name from URL query
-    if not product_name:
-        return jsonify({"error": "Please provide a product name"}), 400
+
+@app.route('/search', methods=['GET'])
+def search():
+    query = request.args.get('query')
+    if not query:
+        return jsonify({"error": "❌ Missing query parameter"}), 400
 
     try:
-        prices = scrape_prices(product_name)  # Call the scraper
-        return jsonify({"product": product_name, "prices": prices})
+        # 🔹 Call the scraping function
+        prices = scrape_prices(query)
+
+        # 🔹 Handle case where no products are found
+        if not prices or "error" in prices[0]:
+            return jsonify({"error": "⚠ No prices found for this product"}), 404
+
+        return jsonify({"retailers": prices})
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"🚨 API Error: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+
 
 if __name__ == '__main__':
-    port = int(os.getenv("PORT", 10000))  # Read from env, default 10000
-    app.run(host='0.0.0.0', port=port)
+    port = int(os.environ.get("PORT", 10000))  # 🔹 Uses Render's assigned port
+    app.run(host='0.0.0.0', port=port, debug=True)

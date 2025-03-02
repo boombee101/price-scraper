@@ -3,3 +3,5 @@ beautifulsoup4
 lxml
 flask
 gunicorn
+flask-cors
+
