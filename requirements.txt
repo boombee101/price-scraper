@@ -4,6 +4,7 @@ lxml
 flask
 gunicorn
 flask-cors
+fake-useragent
 
 
 
